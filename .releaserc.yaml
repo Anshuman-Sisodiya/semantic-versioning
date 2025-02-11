@@ -1,0 +1,9 @@
+branches:
+  - main
+tagFormat: "v${version}"
+plugins:
+  - name: conventional-commits
+  - name: docker
+    config:
+      image: starlord0073/rabbitmq
+

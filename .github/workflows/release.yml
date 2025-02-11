@@ -1,0 +1,57 @@
+name: Semantic Release & Docker Publish
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    name: Semantic Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for semantic versioning
+
+      - name: Install go-semantic-release
+        run: |
+          curl -L "https://github.com/go-semantic-release/semantic-release/releases/latest/download/semantic-release-linux-amd64" -o /usr/local/bin/semantic-release
+          chmod +x /usr/local/bin/semantic-release
+
+      - name: Run Semantic Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: semantic-release
+
+  build-and-push:
+    name: Build & Push Docker Image
+    needs: release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract version from latest Git tag
+        id: get_version
+        run: echo "VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+
+      - name: Build & Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: starlord0073/rabbitmq:${{ env.VERSION }}
+
