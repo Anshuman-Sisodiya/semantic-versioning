@@ -18,13 +18,17 @@ jobs:
 
       - name: Install go-semantic-release
         run: |
-          curl -L "https://github.com/go-semantic-release/semantic-release/releases/latest/download/semantic-release-linux-amd64" -o /usr/local/bin/semantic-release
-          chmod +x /usr/local/bin/semantic-release
+          curl -L "https://github.com/go-semantic-release/semantic-release/releases/latest/download/semantic-release-linux-amd64" -o semantic-release
+          chmod +x semantic-release
+          sudo mv semantic-release /usr/local/bin/
+
+      - name: Verify Installation
+        run: which semantic-release && semantic-release --version
 
       - name: Run Semantic Release
-        run: semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: semantic-release
 
   build-and-push:
     name: Build & Push Docker Image
@@ -46,7 +50,9 @@ jobs:
 
       - name: Extract version from latest Git tag
         id: get_version
-        run: echo "VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        run: |
+          VERSION=$(git describe --tags --abbrev=0 || echo "latest")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build & Push Docker Image
         uses: docker/build-push-action@v5
