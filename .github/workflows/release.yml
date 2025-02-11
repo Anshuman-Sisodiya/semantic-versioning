@@ -22,9 +22,9 @@ jobs:
           chmod +x /usr/local/bin/semantic-release
 
       - name: Run Semantic Release
+        run: semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: semantic-release
 
   build-and-push:
     name: Build & Push Docker Image
